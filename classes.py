@@ -1,6 +1,5 @@
 import tkinter as tk
 
-
 class Vector:
     def __init__(self, data=None):
         if data is None:

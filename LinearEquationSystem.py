@@ -127,24 +127,35 @@ class LinearEquationSystem:
         def calc_element_pos(row_index, row_length):
             return row_index * (band_width + 1) - sum(range(band_width - row_length + 1))
 
-        # Forward elimination
+        print(row_count, band_width, tape_matrix)
+        # 3 - 0 = 3
         for row_index in range(row_count - 1):
             multiplying_row_length = min(band_width + 1, row_count - row_index)
             multiplying_element_pos = calc_element_pos(row_index, multiplying_row_length)
-
+ # 1 2 3            1
+ # 2 3(-1) 4(-2)    1
+ # 3 4 1(-8)        1
             for i in range(multiplying_row_length - 1):
                 current_row_length = min(band_width + 1, row_count - row_index - 1 - i)
                 current_element_pos = calc_element_pos(row_index + i + 1, current_row_length)
 
                 multiplier = tape_matrix[multiplying_element_pos + i + 1] / tape_matrix[multiplying_element_pos]
+                # 2
 
-                for j in range(max(1, current_row_length - 1 - i)):
-                    tape_matrix[current_element_pos + j] -= multiplier * tape_matrix[
-                        multiplying_element_pos + i + j + 1]
+                if (current_row_length != band_width + 1):
+                    print("opt1")
+                    range_limit = current_row_length
+                else:
+                    print("opt2")
+                    range_limit = current_row_length - 1
 
-                vector[row_index + i + 1] -= multiplier * vector[row_index]
+                for j in range(range_limit):
+                    tape_matrix[current_element_pos + j] = tape_matrix[current_element_pos + j] - \
+                                                           multiplier * tape_matrix[multiplying_element_pos + i + j + 1]
+                    print(tape_matrix)
+                vector[row_index + i + 1] = vector[row_index + i + 1] - multiplier * vector[row_index]
 
-        # Back substitution
+
         answers = [0] * row_count
         answers[-1] = vector[-1] / tape_matrix[-1]
 
@@ -171,17 +182,33 @@ class LinearEquationSystem:
             old_result = result.copy()
 
             for i in range(num_variables):
-                sum1 = sum(matrix.data[i][j] * result[j] for j in range(i))
-                sum2 = sum(matrix.data[i][j] * old_result[j] for j in range(i + 1, num_variables))
+                sum1 = 0
+                for j in range(i):
+                    sum1 += matrix.data[i][j] * result[j]
+
+                sum2 = 0
+                for j in range(i + 1, num_variables):
+                    sum2 += matrix.data[i][j] * old_result[j]
+                # print(sum1)
+                # print(sum2)
                 result[i] = (vector.data[i] - sum1 - sum2) / matrix.data[i][i]
 
             number_of_iterations = str(k + 1)
             if all(abs(result[i] - old_result[i]) < tolerance for i in range(num_variables)):
                 break
         else:
-            number_of_iterations = 'Досягнуто максимальної кількості ітерацій: ' + max_iterations
+            number_of_iterations = 'Досягнуто макс к-ті ітерацій: ' + str(max_iterations)
 
-        residual = [sum(matrix.data[i][j] * result[j] for j in range(num_variables)) - vector.data[i]
-                    for i in range(num_variables)]
-        residual_norm = sum(r ** 2 for r in residual) ** 0.5
+        residual = []
+        for i in range(num_variables):
+            sum_term = 0
+            for j in range(num_variables):
+                sum_term += matrix.data[i][j] * result[j]
+            residual.append(sum_term - vector.data[i])
+
+        residual_norm = 0
+        for r in residual:
+            residual_norm += r ** 2
+        residual_norm **= 0.5
+
         return Vector(result), number_of_iterations, residual_norm

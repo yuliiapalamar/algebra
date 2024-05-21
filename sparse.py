@@ -1,5 +1,4 @@
 from copy import deepcopy
-import csv
 
 
 class SparseMatrix:
@@ -14,7 +13,7 @@ class SparseMatrix:
                 self.__row_count = int(values[0])
                 self.__band_width = int(values[1])
             except ValueError as e:
-                raise ValueError(f'Error converting data to float: {e}')
+                raise ValueError(f'Помилка перетворення даних: {e}')
 
     def __getitem__(self, index):
         return self.__sparseMatrix[index]
@@ -33,7 +32,7 @@ class SparseMatrix:
     @band_width.setter
     def band_width(self, value: int):
         if value < 0:
-            raise ValueError("Row number cannot be negative")
+            raise ValueError("М має бути більше нуля")
         else:
             self.__band_width = value
 
@@ -44,29 +43,9 @@ class SparseMatrix:
     @row_count.setter
     def row_count(self, value: int):
         if value < 0:
-            raise ValueError("Row number cannot be negative")
+            raise ValueError("Кількість рядків має бути більше 0")
         else:
             self.__row_count = value
-
-    def __set_sparse_matrix_from_csv(self, file_path):
-        try:
-            with open(file_path, 'r', newline='') as csvfile:
-                reader = csv.reader(csvfile)
-                data = next(reader)
-                values = [float(item) for item in data]
-                self.__row_count = int(values[0])
-                self.__band_width = int(values[1])
-                self.__sparseMatrix = values[2:]
-
-        except FileNotFoundError:
-            raise FileNotFoundError(f'The file {file_path} was not found.')
-        except ValueError as e:
-            raise ValueError(f'Error converting data to float: {e}')
-        except Exception as e:
-            raise Exception(f'An unexpected error occurred: {e}')
-
-    def __sort(self):
-        self.__sparseMatrix.sort(key=lambda x: (x[0], x[1]))
 
     def __str__(self):
         return ', '.join(str(list_) for list_ in self.__sparseMatrix)
@@ -76,3 +55,21 @@ class SparseMatrix:
 
     def pop(self, pos: int):
         return self.__sparseMatrix.pop(pos)
+
+    def print_full_matrix(self):
+        # Initialize a full matrix with zeros
+        full_matrix = [[0] * self.__row_count for _ in range(self.__row_count)]
+        band_width = self.__band_width
+        matrix = self.__sparseMatrix
+
+        for i in range(self.__row_count):
+            # Center diagonal
+            full_matrix[i][i] = matrix[i * (band_width + 1)]
+            # Below main diagonal
+            for j in range(1, min(band_width + 1, self.__row_count - i)):
+                full_matrix[i + j][i] = matrix[i * (band_width + 1) + j]
+                full_matrix[i][i + j] = matrix[i * (band_width + 1) + j]
+
+        # Print the full matrix
+        for row in full_matrix:
+            print(" ".join(map(str, row)))

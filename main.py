@@ -17,7 +17,6 @@ def load_file(var):
 
 def read_data_entry(data_entry):
     data = []
-
     try:
         lines = data_entry.split("\n")
         for line in lines:
